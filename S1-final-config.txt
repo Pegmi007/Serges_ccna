@@ -1,0 +1,163 @@
+!
+! Switch S1 - Final Configuration
+! Lab 12.9.2 - Configure IPv6 Addresses on Network Devices
+! Date: January 26, 2026
+!
+
+version 15.2
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname S1
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0
+!
+no aaa new-model
+!
+! CRITICAL: SDM template for IPv6 support
+! This MUST be configured before assigning IPv6 to VLAN 1
+!
+sdm prefer dual-ipv4-and-ipv6 default
+!
+system mtu routing 1500
+!
+no ip domain-lookup
+!
+! Spanning Tree Configuration
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+vlan internal allocation policy ascending
+!
+! All FastEthernet interfaces (default configuration)
+!
+interface FastEthernet0/1
+!
+interface FastEthernet0/2
+!
+interface FastEthernet0/3
+!
+interface FastEthernet0/4
+!
+! F0/5 connects to R1 G0/0/1
+interface FastEthernet0/5
+!
+! F0/6 connects to PC-A
+interface FastEthernet0/6
+!
+interface FastEthernet0/7
+!
+interface FastEthernet0/8
+!
+interface FastEthernet0/9
+!
+interface FastEthernet0/10
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+!
+interface GigabitEthernet0/2
+!
+! VLAN 1 - Management Interface (SVI)
+!
+interface Vlan1
+ !
+ ! IPv6 Global Unicast Address
+ ipv6 address 2001:DB8:ACAD:1::B/64
+ !
+ ! IPv6 Link-Local Address (manually configured)
+ ipv6 address FE80::B link-local
+ !
+ ! Interface must be activated
+ no shutdown
+!
+ip http server
+ip http secure-server
+!
+! Banner MOTD for security compliance
+!
+banner motd ^C
+**********************************************
+* Warning: Unauthorized access is prohibited! *
+**********************************************
+^C
+!
+! Console line security
+!
+line con 0
+ password 7 0822455D0A16
+ login
+!
+! VTY lines security (Telnet/SSH)
+!
+line vty 0 4
+ password 7 0822455D0A16
+ login
+line vty 5 15
+ password 7 0822455D0A16
+ login
+!
+end
+
+!
+! Configuration Notes:
+! ====================
+!
+! 1. SDM Template: MUST be "dual-ipv4-and-ipv6 default" for IPv6 support
+!    - Default template does NOT support IPv6
+!    - Requires reload after configuration
+!    - Verify with: show sdm prefer
+!
+! 2. VLAN 1 SVI: Management interface for remote access
+!    - IPv6 address: 2001:db8:acad:1::b/64
+!    - Link-local: fe80::b
+!    - Default gateway (from R1 RA): fe80::1
+!
+! 3. No shutdown: Critical! VLAN interfaces are admin down by default
+!
+! 4. Switch does not route - it's Layer 2 only
+!    - No ipv6 unicast-routing needed
+!    - No FF02::2 membership (not a router)
+!
+! 5. Multicast Groups on VLAN 1:
+!    - FF02::1 (all-nodes)
+!    - FF02::1:FF00:B (solicited-node for ::b)
+!
+! 6. SLAAC on switch:
+!    - Switch will receive RA from R1
+!    - Automatically learns default gateway (fe80::1)
+!    - May generate additional SLAAC address
+!

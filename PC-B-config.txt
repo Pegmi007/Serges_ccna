@@ -1,0 +1,272 @@
+# PC-B IPv6 Configuration
+# Lab 12.9.2 - Configure IPv6 Addresses on Network Devices
+# Date: January 26, 2026
+
+## Network Configuration
+
+**Interface:** Ethernet Adapter (NIC)
+**Network:** 2001:db8:acad:a::/64 (Network A)
+**Connected to:** R1 GigabitEthernet 0/0/0 (directly)
+
+## IPv6 Settings
+
+### Static IPv6 Address (Manually Configured)
+- **IPv6 Address:** `2001:db8:acad:a::3`
+- **Subnet Prefix Length:** `64`
+- **Default Gateway:** `fe80::1` (R1's link-local address)
+
+### SLAAC IPv6 Address (Auto-Configured)
+- **IPv6 Address:** `2001:db8:acad:a:xxxx:xxxx:xxxx:xxxx` (auto-generated)
+- **Source:** Router Advertisement from R1 G0/0/0
+- **Prefix:** `2001:db8:acad:a::/64`
+- **Interface ID:** Generated using privacy extensions or EUI-64
+
+### Link-Local Address
+- **IPv6 Address:** `fe80::xxxx:xxxx:xxxx:xxxx` (auto-generated)
+- **Scope:** Link-local only (non-routable)
+
+## Configuration Steps (Windows)
+
+1. Open **Network Connections**
+2. Right-click on **Ethernet adapter** → **Properties**
+3. Select **Internet Protocol Version 6 (TCP/IPv6)** → **Properties**
+4. Select **Use the following IPv6 address**
+5. Enter:
+   ```
+   IPv6 address: 2001:db8:acad:a::3
+   Subnet prefix length: 64
+   Default gateway: fe80::1
+   ```
+6. Click **OK**
+
+## Verification Commands
+
+### View IPv6 Configuration
+```powershell
+ipconfig
+
+# Expected Output:
+# Ethernet adapter Ethernet:
+#    IPv6 Address. . . . . . . . . . . : 2001:db8:acad:a::3 (Preferred)
+#    IPv6 Address. . . . . . . . . . . : 2001:db8:acad:a:xxxx:xxxx:xxxx:xxxx (Temporary)
+#    Link-local IPv6 Address . . . . . : fe80::xxxx:xxxx:xxxx:xxxx%11
+#    Default Gateway . . . . . . . . . : fe80::1%11
+```
+
+### View Detailed IPv6 Information
+```powershell
+ipconfig /all
+```
+
+### Test Connectivity
+
+#### Local Connectivity Tests
+```powershell
+# Ping R1 link-local address
+ping fe80::1
+
+# Ping R1 global unicast address
+ping 2001:db8:acad:a::1
+```
+
+#### Remote Connectivity Tests
+```powershell
+# Ping PC-A on Network 1
+ping 2001:db8:acad:1::3
+
+# Ping S1 management interface
+ping 2001:db8:acad:1::b
+
+# Trace route to PC-A
+tracert 2001:db8:acad:1::3
+
+# Expected tracert output:
+# Tracing route to 2001:db8:acad:1::3 over a maximum of 30 hops
+#   1   <1 ms   2001:db8:acad:a::1   [R1 G0/0/0]
+#   2   <1 ms   2001:db8:acad:1::3   [PC-A]
+# Trace complete.
+```
+
+## Lab Question - SLAAC Investigation
+
+### Before ipv6 unicast-routing
+
+**Command:**
+```powershell
+C:\> ipconfig
+```
+
+**Result:** NO IPv6 global unicast address assigned
+
+**Explanation:**
+- Router R1 is not yet acting as an IPv6 router
+- No Router Advertisements being sent
+- PC-B cannot perform SLAAC without RA
+- Only link-local address (fe80::) is present
+
+### After ipv6 unicast-routing
+
+**Command on R1:**
+```cisco
+R1(config)# ipv6 unicast-routing
+```
+
+**Command on PC-B:**
+```powershell
+C:\> ipconfig
+```
+
+**Result:** IPv6 global unicast address NOW present
+
+**Lab Question:** Why did PC-B receive the Global Routing Prefix and Subnet ID from R1?
+
+**Answer:**
+
+When `ipv6 unicast-routing` is enabled on R1:
+
+1. **R1 joins FF02::2** (all-routers multicast group)
+2. **R1 sends Router Advertisements (RA)** to FF02::1 (all-nodes) periodically
+3. **RA contains:**
+   - Prefix: 2001:db8:acad:a::/64
+   - Prefix length: /64
+   - Router link-local: fe80::1
+   - M-flag: 0 (no DHCPv6 for addresses)
+   - O-flag: 0 (no DHCPv6 for other config)
+4. **PC-B receives RA** and performs SLAAC:
+   - Extracts prefix: 2001:db8:acad:a::/64
+   - Generates interface ID (64 bits)
+   - Combines: prefix + interface ID = complete address
+   - Sets default gateway: fe80::1 (from RA)
+
+**Result:** PC-B automatically configures itself without any DHCP server!
+
+This is **SLAAC (Stateless Address Autoconfiguration)** - a revolutionary IPv6 feature.
+
+## Key Concepts
+
+### Direct Connection to Router
+
+PC-B is directly connected to R1 (no switch in between):
+- Simpler topology for Network A
+- Still requires proper addressing
+- Still receives Router Advertisements
+- Demonstrates IPv6 works with or without switches
+
+### Two Global Addresses Normal
+
+PC-B will have TWO global unicast IPv6 addresses:
+
+1. **Static (2001:db8:acad:a::3):**
+   - Manually configured for stability
+   - Used for incoming connections
+   - Predictable and permanent
+
+2. **SLAAC (2001:db8:acad:a:xxxx:xxxx:xxxx:xxxx):**
+   - Auto-generated from RA
+   - Uses privacy extensions (randomized)
+   - Changes over time for privacy
+   - Used for outbound connections
+
+Both addresses are valid and usable simultaneously!
+
+### Router Advertisements (RA) Details
+
+RAs sent by R1 on G0/0/0 every 200 seconds (default):
+- **Destination:** FF02::1 (all nodes on link)
+- **Source:** fe80::1 (R1's link-local)
+- **Hop Limit:** 255 (must be for security)
+- **Flags:**
+  - M (Managed) = 0: No DHCPv6 for addresses
+  - O (Other) = 0: No DHCPv6 for other config
+  - H (Home Agent) = 0: Not a mobile IPv6 home agent
+- **Prefix Information:**
+  - Prefix: 2001:db8:acad:a::/64
+  - Valid lifetime: 2592000 sec (30 days)
+  - Preferred lifetime: 604800 sec (7 days)
+  - L-flag (on-link) = 1: This prefix is on-link
+  - A-flag (autonomous) = 1: Use for SLAAC
+
+## Troubleshooting
+
+### No SLAAC Address After Enabling Routing
+
+**Symptom:** Only static address, no auto-configured address
+
+**Causes:**
+- Need to wait for next RA (up to 200 seconds)
+- Windows may need IPv6 stack reset
+
+**Solutions:**
+```powershell
+# Option 1: Disable/Enable adapter
+# In Network Connections: Right-click → Disable, then Enable
+
+# Option 2: Reset IPv6
+netsh interface ipv6 reset
+
+# Option 3: Force Router Solicitation
+netsh interface ipv6 delete neighbors
+```
+
+### Cannot Ping Across Networks
+
+**Symptom:** Can ping R1 but not PC-A or S1
+
+**Causes:**
+- Routing not enabled on R1
+- Wrong default gateway on PC-B
+- Firewall blocking
+
+**Solutions:**
+```cisco
+! Verify on R1
+R1# show ipv6 interface brief
+! Both interfaces should be [up/up]
+
+R1# show running-config | include ipv6 unicast
+! Should show: ipv6 unicast-routing
+```
+
+### Link-Local Ping Fails
+
+**Symptom:** Cannot ping fe80::1
+
+**Causes:**
+- Need to specify zone/interface ID
+- Cable issue
+- R1 interface down
+
+**Solutions:**
+```powershell
+# Specify interface ID (check with ipconfig)
+ping fe80::1%11
+
+# Or use global address
+ping 2001:db8:acad:a::1
+```
+
+## Network Diagram (PC-B Perspective)
+
+```
+PC-B (2001:db8:acad:a::3)
+    |
+    | Ethernet Cable
+    |
+[G0/0/0] R1 (2001:db8:acad:a::1)
+    |
+    | Link-local: fe80::1
+    |
+[G0/0/1] R1 (2001:db8:acad:1::1)
+    |
+    | Network 1
+    |
+   S1 ← → PC-A
+```
+
+## Notes
+
+- **Network:** 2001:db8:acad:a::/64 (Network A)
+- **Router Interface:** R1 G0/0/0
+- **Direct Connection:** No switch between PC-B and R1
+- **Remote Network:** 2001:db8:acad:1::/64 (PC-A via R1)
+- **SLAAC Source:** RAs from R1 every 200 seconds

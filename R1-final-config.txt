@@ -1,0 +1,115 @@
+!
+! Router R1 - Final Configuration
+! Lab 12.9.2 - Configure IPv6 Addresses on Network Devices
+! Date: January 26, 2026
+!
+
+version 16.9
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname R1
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 5 $1$mERr$hx5rVt7rPNoS4wqbXKX7m0
+!
+no aaa new-model
+memory-size iomem 15
+!
+no ip domain-lookup
+!
+! IPv6 unicast routing ENABLED - Critical for SLAAC
+ipv6 unicast-routing
+ipv6 cef
+!
+! Interface G0/0/0 - Network A (PC-B LAN)
+!
+interface GigabitEthernet0/0/0
+ no ip address
+ duplex auto
+ speed auto
+ !
+ ! IPv6 Global Unicast Address
+ ipv6 address 2001:DB8:ACAD:A::1/64
+ !
+ ! IPv6 Link-Local Address (manually configured)
+ ipv6 address FE80::1 link-local
+!
+! Interface G0/0/1 - Network 1 (S1/PC-A LAN)
+!
+interface GigabitEthernet0/0/1
+ no ip address
+ duplex auto
+ speed auto
+ !
+ ! IPv6 Global Unicast Address
+ ipv6 address 2001:DB8:ACAD:1::1/64
+ !
+ ! IPv6 Link-Local Address (manually configured)
+ ipv6 address FE80::1 link-local
+!
+! Unused interfaces
+!
+interface Embedded-Service-Engine0/0
+ no ip address
+ shutdown
+!
+interface Serial0/0/0
+ no ip address
+ shutdown
+ clock rate 2000000
+!
+interface Serial0/0/1
+ no ip address
+ shutdown
+!
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+!
+! Banner MOTD for security compliance
+!
+banner motd ^C
+**********************************************
+* Warning: Unauthorized access is prohibited! *
+**********************************************
+^C
+!
+! Console line security
+!
+line con 0
+ password 7 0822455D0A16
+ login
+!
+line aux 0
+!
+! VTY lines security (Telnet/SSH)
+!
+line vty 0 4
+ password 7 0822455D0A16
+ login
+ transport input all
+!
+scheduler allocate 20000 1000
+!
+end
+
+!
+! Configuration Notes:
+! ====================
+!
+! 1. ipv6 unicast-routing: Enables R1 to route IPv6 packets and send RAs
+! 2. Same link-local (fe80::1) on both interfaces: No conflict as link-local is non-routable
+! 3. Service password-encryption: Encrypts plaintext passwords (Type 7)
+! 4. Enable secret: Uses MD5 hashing (Type 5) - more secure than enable password
+! 5. No shutdown: Not shown but already applied (interfaces are up)
+!
+! Multicast Groups:
+! - FF02::1 (all-nodes) - Present on all IPv6 interfaces
+! - FF02::2 (all-routers) - Present after ipv6 unicast-routing
+! - FF02::1:FF00:1 (solicited-node) - For address resolution
+!
