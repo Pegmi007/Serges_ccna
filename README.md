@@ -18,7 +18,7 @@
 - [Troubleshooting](#troubleshooting)
 - [Resources](#resources)
 
-## 🎯 Overview
+### 🎯 Overview
 
 This laboratory demonstrates the configuration of IPv6 addresses on Cisco network devices, including:
 - Manual IPv6 address assignment on router interfaces
@@ -31,7 +31,7 @@ This laboratory demonstrates the configuration of IPv6 addresses on Cisco networ
 **Difficulty:** Intermediate  
 **Lab Number:** 12.9.2
 
-## 🗺️ Network Topology
+### 🗺️ Network Topology
 
 ```
 PC-B (.a::3)  ←→  [G0/0/0] R1 [G0/0/1]  ←→  S1  ←→  PC-A (.1::3)
