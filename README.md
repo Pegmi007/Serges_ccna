@@ -7,7 +7,7 @@
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
+- [Overview](#-overview)
 - [Network Topology](#%EF%B8%8F-network-topology)
 - [Objectives](#objectives)
 - [Equipment](#equipment)
