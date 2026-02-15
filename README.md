@@ -71,7 +71,7 @@ Network A                      Network 1      VLAN 1 (.1::b)
 - Verify inter-VLAN routing with traceroute
 - Confirm SLAAC functionality
 
-## 🖥️ Equipment
+##  Equipment
 
 - 1x Cisco Router 4221 (or equivalent) - **R1**
 - 1x Cisco Catalyst 2960 Switch - **S1**
@@ -79,7 +79,7 @@ Network A                      Network 1      VLAN 1 (.1::b)
 - Console cables
 - 3x Ethernet straight-through cables
 
-## 📝 Lab Steps
+## Lab Steps
 
 ### Part 1: Basic Configuration
 
@@ -122,7 +122,7 @@ R1(config)# end
 #### Step 2: Switch S1 Initial Setup
 
 ```cisco
-! Apply same basic configuration as R1
+! Apply the same basic configuration as R1
 Switch> enable
 Switch# configure terminal
 Switch(config)# hostname S1
@@ -130,7 +130,7 @@ S1(config)# enable secret class
 ! ... (same pattern as R1)
 ```
 
-#### Step 3: ⚠️ CRITICAL - Enable IPv6 on Switch
+#### Step 3:  CRITICAL - Enable IPv6 on Switch
 
 ```cisco
 ! Check current SDM template
@@ -145,7 +145,7 @@ S1(config)# end
 S1# reload
 ```
 
-**💡 Justification:** The default Catalyst 2960 SDM template does NOT support IPv6. Without this step, you CANNOT assign IPv6 addresses to VLAN 1 SVI.
+** Justification:** The default Catalyst 2960 SDM template does *NOT support IPv6*. Without this step, you CANNOT assign IPv6 addresses to VLAN 1 SVI.
 
 ### Part 2: IPv6 Configuration
 
@@ -177,7 +177,7 @@ R1# show ipv6 interface g0/0/0
 
 **Expected Output:**
 - Link-local: `FE80::1` (manually configured)
-- Global: `2001:DB8:ACAD:A::1/64`
+- Global: `2001:DB8:ACAD: A::1/64`
 - Multicast groups: `FF02::1` (all-nodes), `FF02::1:FF00:1` (solicited-node)
 
 #### Step 5: Enable IPv6 Routing (SLAAC)
@@ -188,7 +188,7 @@ R1(config)# ipv6 unicast-routing
 R1(config)# exit
 ```
 
-**🔥 CRITICAL:** This command:
+** CRITICAL:** This command:
 1. Enables IPv6 routing between interfaces
 2. Joins FF02::2 (all-routers multicast group)
 3. Starts sending Router Advertisements (RA)
@@ -232,7 +232,7 @@ S1# show ipv6 interface vlan 1
 - Prefix Length: `64`
 - Default Gateway: `fe80::1`
 
-**💡 Note:** Each PC will have TWO global IPv6 addresses:
+** Note:** Each PC will have TWO global IPv6 addresses:
 1. Static address (manually configured)
 2. SLAAC address (auto-generated from R1's RA)
 
@@ -267,7 +267,7 @@ C:\> ping 2001:db8:acad:1::3
 C:\> ping fe80::1
 ```
 
-## 📁 Configuration Files
+## Configuration Files
 
 Complete device configurations are available in the [`configs/`](./configs/) directory:
 
@@ -276,7 +276,7 @@ Complete device configurations are available in the [`configs/`](./configs/) dir
 - [`PC-A-config.txt`](./configs/PC-A-config.txt) - PC-A IPv6 settings
 - [`PC-B-config.txt`](./configs/PC-B-config.txt) - PC-B IPv6 settings
 
-## ✅ Verification Checklist
+## Verification Checklist
 
 - [ ] All interfaces show `[up/up]` status
 - [ ] R1 has both global and link-local addresses on each interface
@@ -288,7 +288,7 @@ Complete device configurations are available in the [`configs/`](./configs/) dir
 - [ ] Traceroute shows proper path through R1
 - [ ] PCs have both static and SLAAC addresses
 
-## 💡 Key Concepts
+## Key Concepts
 
 ### IPv6 Address Structure
 
@@ -316,7 +316,7 @@ For address `2001:db8:acad:1::3/64`:
    - EUI-64 (based on MAC address), OR
    - Privacy extensions (random)
 5. Host combines: Prefix (64 bits) + Interface ID (64 bits)
-6. Host uses router's link-local as default gateway
+6. Host uses router's link-local as the default gateway
 
 **Result:** No DHCP server needed for basic IPv6 addressing!
 
@@ -328,7 +328,7 @@ For address `2001:db8:acad:1::3/64`:
 | `FF02::2` | All IPv6 routers (enables RA transmission) |
 | `FF02::1:FFxx:xxxx` | Solicited-node (used for Neighbor Discovery) |
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
@@ -356,16 +356,16 @@ ping <address>
 tracert <address>
 ```
 
-## 📚 Resources
+## Resources
 
 - [Complete Lab Report (PDF)](./docs/Lab_12.9.2_IPv6_Configuration_Complete_Report.pdf)
 - [Cisco IPv6 Configuration Guide](https://www.cisco.com/c/en/us/td/docs/ios-xml/ios/ipv6_basic/configuration/xe-16/ip6b-xe-16-book.html)
 - [RFC 3849 - IPv6 Address Prefix Reserved for Documentation](https://tools.ietf.org/html/rfc3849)
 - [RFC 4291 - IPv6 Addressing Architecture](https://tools.ietf.org/html/rfc4291)
 
-## 🎓 Lab Status
+## Lab Status
 
-**✅ COMPLETED SUCCESSFULLY**
+**COMPLETED SUCCESSFULLY**
 
 All objectives achieved:
 - ✓ Basic device configuration completed
@@ -384,6 +384,6 @@ All objectives achieved:
 
 ---
 
-## 📄 License
+## License
 
 This lab documentation is for educational purposes only. Cisco and CCNA are trademarks of Cisco Systems, Inc.
